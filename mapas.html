@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PB Tournament - Mapas</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <!-- INTEGRAÇÃO: Importando o gerenciador de dados -->
+  <script src="storage.js"></script>
+  <style>
+    body { background-color: #121214; color: #e1e1e6; }
+  </style>
+</head>
+<body class="p-6 md:p-12 font-sans">
+
+  <div class="max-w-4xl mx-auto">
+    <!-- Navegação Simples -->
+    <nav class="flex gap-6 mb-12 border-b border-zinc-800 pb-4 text-sm font-medium text-zinc-400">
+      <a href="index.html" class="hover:text-white transition">Chaveamento</a>
+      <a href="times.html" class="hover:text-white transition">Times & Players</a>
+      <a href="mapas.html" class="text-[#ff3e3e] border-b-2 border-[#ff3e3e] pb-4 -mb-[18px]">Mapas</a>
+    </nav>
+
+    <h1 class="text-2xl font-bold tracking-tight mb-8">Cadastro de Mapas</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Formulário -->
+      <div class="bg-[#1a1a1e] p-6 rounded-xl border border-zinc-800/80 h-fit">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Novo Mapa</h2>
+        <form id="form-mapa" class="space-y-4">
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1">Nome do Mapa</label>
+            <input type="text" id="nome-mapa" required placeholder="Ex: Luxville" 
+                   class="w-full bg-[#121214] border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#ff3e3e] transition">
+          </div>
+          <button type="submit" class="w-full bg-[#ff3e3e] hover:bg-[#e03535] text-white text-sm font-medium py-2 rounded-lg transition cursor-pointer">
+            Adicionar Mapa
+          </button>
+        </form>
+      </div>
+
+      <!-- Lista de Mapas -->
+      <div class="md:col-span-2 bg-[#1a1a1e] p-6 rounded-xl border border-zinc-800/80">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Mapas Cadastrados</h2>
+        <ul id="lista-mapas" class="divide-y divide-zinc-800/60">
+          <!-- Inserido via JS -->
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // Ajuste os IDs dos elementos de acordo com o seu HTML se necessário
+    const formMapa = document.getElementById('form-mapa') || document.querySelector('form');
+    const gridMapas = document.getElementById('grid-mapas') || document.getElementById('lista-mapas');
+
+    // CONFIGURAÇÃO DOS BANCOS (Garante leitura de onde quer que o dado esteja)
+    let mapas = [];
+    let torneio = JSON.parse(localStorage.getItem('pb_torneio')) || null;
+    let mapasIsolados = JSON.parse(localStorage.getItem('pb_mapas')) || [];
+
+    // Tática de Sincronização Forçada na inicialização
+    if (torneio && torneio.mapas_gerais && torneio.mapas_gerais.length > 0) {
+      mapas = torneio.mapas_gerais;
+    } else if (mapasIsolados.length > 0) {
+      mapas = mapasIsolados;
+    } else if (torneio && torneio.mapas && torneio.mapas.length > 0) {
+      // Caso seu index.html ou partida.html salve apenas como torneio.mapas
+      mapas = torneio.mapas;
+    } else {
+      // Se estiver totalmente vazio, você pode iniciar com alguns mapas padrão do Point Blank por segurança
+      mapas = [
+        { id: 'm_1', nome: 'Luxville', ativo: true },
+        { id: 'm_2', nome: 'Downtown', ativo: true },
+        { id: 'm_3', nome: 'Stormtube', ativo: true },
+        { id: 'm_4', nome: 'Sandstorm', ativo: true },
+        { id: 'm_5', nome: 'Midtown', ativo: true }
+      ];
+    }
+
+    // Forçar a gravação inicial correta para alinhar os bancos de dados
+    salvarDados();
+
+    function salvarDados() {
+      // 1. Salva na chave independente (o que a tela de mapas usava originalmente)
+      localStorage.setItem('pb_mapas', JSON.stringify(mapas));
+      
+      // 2. Salva dentro da estrutura do torneio (o que a tela de partidas/index usa)
+      if (torneio) {
+        torneio.mapas_gerais = mapas;
+        torneio.mapas = mapas; // Duplicado por segurança para compatibilidade
+        localStorage.setItem('pb_torneio', JSON.stringify(torneio));
+      }
+    }
+
+    function renderMapas() {
+      if (!gridMapas) return;
+      
+      if (!mapas || mapas.length === 0) {
+        gridMapas.innerHTML = `<div class="bg-[#1a1a1e] p-6 rounded-xl border border-zinc-800/80 text-zinc-500 text-sm text-center col-span-full">Nenhum mapa cadastrado ainda.</div>`;
+        return;
+      }
+
+      // Renderiza os cards dos mapas (Adapte a estrutura HTML interna caso seu design use algo diferente)
+      gridMapas.innerHTML = mapas.map(mapa => `
+        <div class="bg-[#1a1a1e] p-5 rounded-xl border ${mapa.ativo ? 'border-zinc-800/80' : 'border-zinc-900 opacity-50'} flex justify-between items-center">
+          <div>
+            <h3 class="text-base font-bold ${mapa.ativo ? 'text-white' : 'text-zinc-500 line-through'}">${mapa.nome}</h3>
+            <span class="text-[10px] uppercase font-mono tracking-wider ${mapa.ativo ? 'text-emerald-400' : 'text-zinc-600'}">
+              ${mapa.ativo ? 'Disponível no Pool' : 'Inativo'}
+            </span>
+          </div>
+          <div class="flex items-center gap-3">
+            <!-- Botão de Alternar Status (Ativo/Inativo) -->
+            <button onclick="alternarStatusMapa('${mapa.id}')" class="text-xs ${mapa.ativo ? 'text-zinc-400 hover:text-amber-400' : 'text-zinc-500 hover:text-emerald-400'} transition cursor-pointer">
+              ${mapa.ativo ? 'Desativar' : 'Ativar'}
+            </button>
+            <span class="text-zinc-700">|</span>
+            <!-- Botão de Excluir -->
+            <button onclick="deletarMapa('${mapa.id}')" class="text-zinc-500 hover:text-red-400 text-xs transition cursor-pointer">
+              Excluir
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Evento para criar novo mapa
+    if (formMapa) {
+      formMapa.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nomeInput = document.getElementById('nome-mapa') || document.querySelector('input[type="text"]');
+        if (!nomeInput || !nomeInput.value.trim()) return;
+
+        const novoMapa = {
+          id: 'm_' + Date.now(),
+          nome: nomeInput.value.trim(),
+          ativo: true
+        };
+
+        mapas.push(novoMapa);
+        salvarDados();
+        nomeInput.value = '';
+        renderMapas();
+      });
+    }
+
+    // Alternar se o mapa está ativo na rotação do campeonato ou não
+    window.alternarStatusMapa = function(id) {
+      const idx = mapas.findIndex(m => m.id === id);
+      if (idx !== -1) {
+        mapas[idx].ativo = !mapas[idx].ativo;
+        salvarDados();
+        renderMapas();
+      }
+    };
+
+    // Deletar mapa do pool
+    window.deletarMapa = function(id) {
+      mapas = mapas.filter(m => m.id !== id);
+      salvarDados();
+      renderMapas();
+    };
+
+    // Inicialização da tela
+    renderMapas();
+  </script>
+</body>
+</html>

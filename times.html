@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PB Tournament - Times</title>
+  <!-- Mudado para a versão estável e robusta do Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #121214; color: #e1e1e6; }
+  </style>
+</head>
+<body class="p-6 md:p-12 font-sans">
+
+  <div class="max-w-5xl mx-auto">
+    <!-- Navegação -->
+    <nav class="flex gap-6 mb-12 border-b border-zinc-800 pb-4 text-sm font-medium text-zinc-400">
+      <a href="index.html" class="hover:text-white transition">Chaveamento</a>
+      <a href="times.html" class="text-[#ff3e3e] border-b-2 border-[#ff3e3e] pb-4 -mb-[18px]">Times & Players</a>
+      <a href="mapas.html" class="hover:text-white transition">Mapas</a>
+    </nav>
+
+    <h1 class="text-2xl font-bold tracking-tight mb-8">Gerenciamento de Times</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Formulário de Time -->
+      <div class="bg-[#1a1a1e] p-6 rounded-xl border border-zinc-800/80 h-fit">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Novo Time</h2>
+        <form id="form-time" class="space-y-4">
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1">Nome do Time</label>
+            <input type="text" id="nome-time" required placeholder="Ex: CNB e-Sports" 
+                   class="w-full bg-[#121214] border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#ff3e3e] transition">
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1">TAG</label>
+            <input type="text" id="tag-time" maxlength="4" required placeholder="Ex: CNB" 
+                   class="w-full bg-[#121214] border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#ff3e3e] transition uppercase">
+          </div>
+          <button type="submit" class="w-full bg-[#ff3e3e] hover:bg-[#e03535] text-white text-sm font-medium py-2 rounded-lg transition cursor-pointer">
+            Criar Time
+          </button>
+        </form>
+      </div>
+
+      <!-- Grid de Times Dinâmico -->
+      <div class="lg:col-span-2 space-y-6" id="grid-times">
+        <!-- Inserido via JS -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const formTime = document.getElementById('form-time');
+    const gridTimes = document.getElementById('grid-times');
+
+    // Integração com o Storage centralizado ou fallback para a lista isolada de times
+    let torneio = JSON.parse(localStorage.getItem('pb_torneio'));
+    let times = JSON.parse(localStorage.getItem('pb_times')) || [];
+
+    // Se o torneio já existir e contiver uma propriedade "times_gerais", usamos ela para manter a sincronia
+    if (torneio && torneio.times_gerais) {
+      times = torneio.times_gerais;
+    }
+
+    function salvarDados() {
+      // Salva na lista isolada de times
+      localStorage.setItem('pb_times', JSON.stringify(times));
+      
+      // Se o torneio existir, atualiza ele e sincroniza as lines nos chaveamentos ativos
+      if (torneio) {
+        torneio.times_gerais = times;
+        
+        // Sincroniza os players das partidas que ainda vão acontecer ou estão em andamento
+        if (torneio.partidas) {
+          torneio.partidas.forEach(partida => {
+            const timeAAtualizado = times.find(t => t.id === partida.timeA?.id);
+            const timeBAtualizado = times.find(t => t.id === partida.timeB?.id);
+            
+            if (timeAAtualizado) partida.timeA.players = timeAAtualizado.players;
+            if (timeBAtualizado) partida.timeB.players = timeBAtualizado.players;
+          });
+        }
+        localStorage.setItem('pb_torneio', JSON.stringify(torneio));
+      }
+    }
+
+    function renderTimes() {
+      if (times.length === 0) {
+        gridTimes.innerHTML = `<div class="bg-[#1a1a1e] p-6 rounded-xl border border-zinc-800/80 text-zinc-500 text-sm">Nenhum time cadastrado ainda.</div>`;
+        return;
+      }
+
+      gridTimes.innerHTML = times.map(time => `
+        <div class="bg-[#1a1a1e] p-6 rounded-xl border border-zinc-800/80">
+          <div class="flex justify-between items-start border-b border-zinc-800/60 pb-3 mb-4">
+            <div>
+              <span class="text-xs bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded font-mono font-bold mr-2">${time.tag}</span>
+              <h3 class="inline-block text-base font-bold text-white">${time.nome}</h3>
+            </div>
+            <button onclick="deletarTime('${time.id}')" class="text-zinc-500 hover:text-red-400 text-xs transition cursor-pointer">Excluir Time</button>
+          </div>
+
+          <!-- Cadastro de player rápido dentro do time -->
+          <div class="flex gap-2 mb-4">
+            <input type="text" id="input-p-${time.id}" placeholder="Nickname do Player" 
+                   class="flex-1 bg-[#121214] border border-zinc-800 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#ff3e3e] transition">
+            <button onclick="adicionarPlayer('${time.id}')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer">
+              + Add
+            </button>
+          </div>
+
+          <!-- Lista de Players -->
+          <div class="space-y-1.5">
+            <span class="text-[11px] uppercase tracking-wider font-semibold text-zinc-500 block">Line-up (${time.players ? time.players.length : 0})</span>
+            ${(!time.players || time.players.length === 0) ? '<p class="text-xs text-zinc-600 italic">Sem players na line.</p>' : ''}
+            <div class="flex flex-wrap gap-2">
+              ${(time.players || []).map(p => `
+                <span class="inline-flex items-center gap-1.5 bg-[#121214] border border-zinc-800 text-zinc-300 px-2.5 py-1 rounded-md text-xs">
+                  ${p.nickname}
+                  <button onclick="deletarPlayer('${time.id}', '${p.id}')" class="text-zinc-600 hover:text-red-400 font-bold ml-1 cursor-pointer">×</button>
+                </span>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Evento criar time
+    formTime.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const nomeInput = document.getElementById('nome-time');
+      const tagInput = document.getElementById('tag-time');
+
+      const novoTime = {
+        id: 't_' + Date.now(),
+        nome: nomeInput.value.trim(),
+        tag: tagInput.value.trim().toUpperCase(),
+        players: []
+      };
+
+      times.push(novoTime);
+      salvarDados();
+      nomeInput.value = '';
+      tagInput.value = '';
+      renderTimes();
+    });
+
+    // Ações de Player
+    window.adicionarPlayer = function(timeId) {
+      const input = document.getElementById(`input-p-${timeId}`);
+      const nick = input.value.trim();
+      if(!nick) return;
+
+      const timeIdx = times.findIndex(t => t.id === timeId);
+      if (!times[timeIdx].players) times[timeIdx].players = [];
+      
+      times[timeIdx].players.push({
+        id: 'p_' + Date.now() + Math.random().toString(36).substr(2, 5),
+        nickname: nick
+      });
+
+      salvarDados();
+      renderTimes();
+    };
+
+    window.deletarPlayer = function(timeId, playerId) {
+      const timeIdx = times.findIndex(t => t.id === timeId);
+      times[timeIdx].players = times[timeIdx].players.filter(p => p.id !== playerId);
+      salvarDados();
+      renderTimes();
+    };
+
+    window.deletarTime = function(id) {
+      // Evita problemas se o time já fizer parte de um chaveamento ativo
+      if (torneio && torneio.partidas && torneio.partidas.some(p => p.timeA?.id === id || p.timeB?.id === id)) {
+        alert("Este time não pode ser excluído porque já está alocado em um chaveamento ativo!");
+        return;
+      }
+
+      times = times.filter(t => t.id !== id);
+      salvarDados();
+      renderTimes();
+    };
+
+    renderTimes();
+  </script>
+</body>
+</html>

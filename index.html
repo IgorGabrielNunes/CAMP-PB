@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PB Tournament - Chaveamento</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="storage.js"></script>
+  <script src="engine.js"></script>
+  <style>
+    body { background-color: #121214; color: #e1e1e6; }
+    .bracket-connection { position: relative; }
+  </style>
+</head>
+<body class="p-6 md:p-12 font-sans">
+
+  <div class="max-w-7xl mx-auto">
+    <!-- Navegação -->
+    <nav class="flex gap-6 mb-12 border-b border-zinc-800 pb-4 text-sm font-medium text-zinc-400">
+      <a href="index.html" class="text-[#ff3e3e] border-b-2 border-[#ff3e3e] pb-4 -mb-[18px]">Chaveamento</a>
+      <a href="times.html" class="hover:text-white transition">Times & Players</a>
+      <a href="mapas.html" class="hover:text-white transition">Mapas</a>
+    </nav>
+
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight">Painel do Torneio</h1>
+        <p class="text-xs text-zinc-400 mt-1" id="info-times-contagem">Carregando informações...</p>
+      </div>
+      
+      <!-- Seletor de times configurável -->
+      <div class="flex items-center gap-3 bg-[#1a1a1e] p-2 rounded-lg border border-zinc-800" id="wrapper-config-times">
+        <label for="qtd-times-torneio" class="text-xs font-medium text-zinc-400 pl-1">Times no Chaveamento:</label>
+        <select id="qtd-times-torneio" class="bg-zinc-900 border border-zinc-750 rounded text-xs px-2 py-1 text-white focus:outline-none focus:border-[#ff3e3e]">
+          <option value="4">4 Times (Semifinal Direta)</option>
+          <option value="6">6 Times (Misto / Repescagem)</option>
+          <option value="8" selected>8 Times (Quartas de Final)</option>
+          <option value="10">10 Times</option>
+          <option value="12">12 Times</option>
+          <option value="16">16 Times</option>
+        </select>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="limparTorneio()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium px-4 py-2 rounded-lg transition cursor-pointer">
+          Resetar Tudo
+        </button>
+        <button id="btn-gerar" onclick="gerarChaveamentoConfiguravel()" class="bg-[#ff3e3e] hover:bg-[#e03535] text-white text-xs font-medium px-5 py-2 rounded-lg transition cursor-pointer hidden">
+          Gerar Chaves
+        </button>
+      </div>
+    </div>
+
+    <!-- Alertas e Estados de Erro -->
+    <div id="estado-config" class="hidden bg-[#1a1a1e] p-6 rounded-xl border border-zinc-800/80 text-center max-w-xl mx-auto my-12">
+      <p class="text-sm text-zinc-400 mb-2" id="msg-erro-config">Carregando validações...</p>
+      <a href="times.html" class="inline-block mt-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition">Ir para Cadastro de Times</a>
+    </div>
+
+    <!-- Container do Chaveamento Visual -->
+    <div id="chaveamento-container" class="hidden overflow-x-auto pb-6">
+      <div class="flex gap-12 items-center min-w-[800px] justify-between p-4">
+        
+        <!-- Coluna Quartas de Final -->
+        <div id="col-quartas" class="flex-1 space-y-12">
+          <h3 class="text-center text-xs uppercase font-bold tracking-wider text-zinc-500 mb-4">Quartas de Final</h3>
+          <div class="space-y-8" id="partidas-quartas"></div>
+        </div>
+
+        <!-- Coluna Semifinal -->
+        <div id="col-semis" class="flex-1 space-y-12">
+          <h3 class="text-center text-xs uppercase font-bold tracking-wider text-zinc-500 mb-4">Semifinais</h3>
+          <div class="space-y-16" id="partidas-semis"></div>
+        </div>
+
+        <!-- Coluna Grande Final -->
+        <div id="col-final" class="flex-1 space-y-12">
+          <h3 class="text-center text-xs uppercase font-bold tracking-wider text-zinc-500 mb-4">Grande Final</h3>
+          <div class="" id="partidas-final"></div>
+        </div>
+
+        <!-- Campeão -->
+        <div class="w-48 text-center bg-gradient-to-b from-yellow-600/20 to-transparent p-6 rounded-xl border border-yellow-600/30">
+          <span class="text-[10px] text-yellow-500 uppercase tracking-widest font-bold block mb-2">🏆 Campeão</span>
+          <div id="box-campeao" class="text-sm font-bold text-white italic">Aguardando...</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- NOVO SECTOR: Painel de Estatísticas do Torneio (Visível apenas após finalizado) -->
+    <div id="painel-estatisticas" class="mt-16 hidden space-y-8 border-t border-zinc-800 pt-12">
+      <div>
+        <h2 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+          <span>📊</span> Estatísticas e Leaderboards do Campeonato
+        </h2>
+        <p class="text-xs text-zinc-400 mt-1">Dados computados com base em todos os mapas jogados nesta edição.</p>
+      </div>
+
+      <!-- Grid Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Card MVP -->
+        <div class="bg-gradient-to-br from-purple-900/20 to-[#1a1a1e] border border-purple-500/30 p-5 rounded-xl flex items-center gap-4 shadow-xl">
+          <div class="text-3xl bg-purple-500/10 p-3 rounded-lg border border-purple-500/20">👑</div>
+          <div>
+            <span class="text-[10px] text-purple-400 uppercase font-black tracking-widest block">MVP do Torneio</span>
+            <h4 id="estatistica-mvp-nome" class="text-base font-bold text-white mt-0.5">Nenhum</h4>
+            <p id="estatistica-mvp-detalhe" class="text-xs text-zinc-400 font-mono mt-0.5">K/D: 0.00</p>
+          </div>
+        </div>
+
+        <!-- Card Maior Fragger (Mais Kills) -->
+        <div class="bg-gradient-to-br from-red-900/10 to-[#1a1a1e] border border-red-500/20 p-5 rounded-xl flex items-center gap-4 shadow-xl">
+          <div class="text-3xl bg-red-500/10 p-3 rounded-lg border border-red-500/20">🎯</div>
+          <div>
+            <span class="text-[10px] text-red-400 uppercase font-black tracking-widest block">Maior Fragger</span>
+            <h4 id="estatistica-fragger-nome" class="text-base font-bold text-white mt-0.5">Nenhum</h4>
+            <p id="estatistica-fragger-detalhe" class="text-xs text-zinc-400 font-mono mt-0.5">0 Total Kills</p>
+          </div>
+        </div>
+
+        <!-- Card Melhor Assistência -->
+        <div class="bg-gradient-to-br from-blue-900/10 to-[#1a1a1e] border border-zinc-800 p-5 rounded-xl flex items-center gap-4 shadow-xl">
+          <div class="text-3xl bg-blue-500/10 p-3 rounded-lg border border-zinc-800">🤝</div>
+          <div>
+            <span class="text-[10px] text-zinc-400 uppercase font-black tracking-widest block">Suporte de Elite</span>
+            <h4 id="estatistica-suporte-nome" class="text-base font-bold text-white mt-0.5">Nenhum</h4>
+            <p id="estatistica-suporte-detalhe" class="text-xs text-zinc-400 font-mono mt-0.5">0 Assists</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tabelas de Detalhes -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Tabela: Top Players por Frag -->
+        <div class="bg-[#1a1a1e] border border-zinc-800 rounded-xl p-5 shadow-lg">
+          <h3 class="text-xs font-bold text-zinc-400 uppercase tracking-wider border-b border-zinc-800 pb-2 mb-4">Ranking Geral de Frags (Players)</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="text-zinc-500 font-mono border-b border-zinc-800 pb-2 uppercase text-[9px]">
+                  <th class="pb-2">Pos</th>
+                  <th class="pb-2">Jogador</th>
+                  <th class="pb-2 text-center">Kills</th>
+                  <th class="pb-2 text-center">Assists</th>
+                  <th class="pb-2 text-center">Deaths</th>
+                  <th class="pb-2 text-center">K/D Rate</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-top-players" class="divide-y divide-zinc-800/40 font-sans text-zinc-300">
+                <!-- Inserido dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tabela: Desempenho Estatístico dos Times -->
+        <div class="bg-[#1a1a1e] border border-zinc-800 rounded-xl p-5 shadow-lg">
+          <h3 class="text-xs font-bold text-zinc-400 uppercase tracking-wider border-b border-zinc-800 pb-2 mb-4">Estatísticas das Equipes (Rounds & Kills)</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="text-zinc-500 font-mono border-b border-zinc-800 pb-2 uppercase text-[9px]">
+                  <th class="pb-2">Equipe</th>
+                  <th class="pb-2 text-center">Rounds Pró</th>
+                  <th class="pb-2 text-center">Rounds Contra</th>
+                  <th class="pb-2 text-center">Total Kills</th>
+                  <th class="pb-2 text-center">Status Final</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-status-times" class="divide-y divide-zinc-800/40 font-sans text-zinc-300">
+                <!-- Inserido dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let timesGlobais = [];
+    let torneio = null;
+    let mapas = [];
+
+    try {
+      timesGlobais = (typeof StoragePB !== 'undefined' && StoragePB.getTimesGlobais) ? StoragePB.getTimesGlobais() : [];
+    } catch(e) {}
+    try {
+      torneio = (typeof StoragePB !== 'undefined' && StoragePB.getTorneio) ? StoragePB.getTorneio() : null;
+    } catch(e) {}
+    try {
+      mapas = (typeof StoragePB !== 'undefined' && StoragePB.getMapas) ? StoragePB.getMapas() : [];
+    } catch(e) {}
+
+    if (!timesGlobais || timesGlobais.length === 0) timesGlobais = JSON.parse(localStorage.getItem('pb_times')) || [];
+    if (!torneio) torneio = JSON.parse(localStorage.getItem('pb_torneio')) || null;
+    if (!mapas || mapas.length === 0) mapas = JSON.parse(localStorage.getItem('pb_mapas')) || [];
+
+    if (torneio) {
+      if (!torneio.times_gerais || torneio.times_gerais.length === 0) torneio.times_gerais = torneio.times || timesGlobais;
+      if (!torneio.mapas_gerais || torneio.mapas_gerais.length === 0) torneio.mapas_gerais = torneio.mapas || mapas;
+      timesGlobais = torneio.times_gerais;
+    }
+
+    const infoTimesContagem = document.getElementById('info-times-contagem');
+    const btnGerar = document.getElementById('btn-gerar');
+    const estadoConfig = document.getElementById('estado-config');
+    const msgErroConfig = document.getElementById('msg-erro-config');
+    const chaveamentoContainer = document.getElementById('chaveamento-container');
+    const seletorQtd = document.getElementById('qtd-times-torneio');
+    const wrapperConfigTimes = document.getElementById('wrapper-config-times');
+
+    if (seletorQtd) {
+      seletorQtd.addEventListener('change', verificarEstruturaEValidez);
+    }
+
+    function verificarEstruturaEValidez() {
+      if (torneio && torneio.partidas && torneio.partidas.length > 0) {
+        if (wrapperConfigTimes) wrapperConfigTimes.classList.add('hidden');
+        return;
+      } else {
+        if (wrapperConfigTimes) wrapperConfigTimes.classList.remove('hidden');
+      }
+
+      const metaAlvo = parseInt(seletorQtd.value, 10);
+      
+      if (timesGlobais.length < metaAlvo) {
+        if (btnGerar) btnGerar.classList.add('hidden');
+        if (estadoConfig) estadoConfig.classList.remove('hidden');
+        if (msgErroConfig) msgErroConfig.innerText = `Você selecionou a chave de ${metaAlvo} times, mas possui apenas ${timesGlobais.length} cadastrados. Insira mais times.`;
+      } else {
+        if (btnGerar) btnGerar.classList.remove('hidden');
+        if (estadoConfig) estadoConfig.classList.add('hidden');
+      }
+    }
+
+    function inicializar() {
+      if (infoTimesContagem) {
+        infoTimesContagem.innerText = `Times ativos em base de dados: ${timesGlobais.length}`;
+      }
+      
+      if (!torneio || !torneio.partidas || torneio.partidas.length === 0) {
+        if (chaveamentoContainer) chaveamentoContainer.classList.add('hidden');
+        document.getElementById('painel-estatisticas').classList.add('hidden');
+        verificarEstruturaEValidez();
+      } else {
+        if (btnGerar) btnGerar.classList.add('hidden');
+        if (estadoConfig) estadoConfig.classList.add('hidden');
+        if (wrapperConfigTimes) wrapperConfigTimes.classList.add('hidden');
+        if (chaveamentoContainer) chaveamentoContainer.classList.remove('hidden');
+        renderizarChaves();
+        processarEstatísticasDoCampeonato();
+      }
+    }
+
+    function embaralhar(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function gerarChaveamentoConfiguravel() {
+      const tamanhoDefinido = parseInt(seletorQtd.value, 10);
+
+      if (tamanhoDefinido % 2 !== 0) {
+        alert("O número selecionado para o chaveamento precisa ser obrigatoriamente PAR.");
+        return;
+      }
+      if (timesGlobais.length < tamanhoDefinido) {
+        alert(`Você precisa ter pelo menos ${tamanhoDefinido} times cadastrados.`);
+        return;
+      }
+
+      const timesSelecionados = embaralhar([...timesGlobais]).slice(0, tamanhoDefinido);
+
+      torneio = {
+        id: 'torneio_' + Date.now(),
+        nome: "PB Tournament",
+        fase: tamanhoDefinido <= 4 ? "Semifinal" : "Quartas",
+        times_gerais: timesSelecionados,
+        mapas_gerais: mapas,
+        campeao: null,
+        partidas: []
+      };
+
+      if (tamanhoDefinido <= 4) {
+        torneio.partidas.push({ id: 'match_s_1', fase: 'Semifinal', timeA: timesSelecionados[0] || null, timeB: timesSelecionados[1] || null, placar: { A: 0, B: 0 }, vencedor_id: null, status: 'Pendente' });
+        torneio.partidas.push({ id: 'match_s_2', fase: 'Semifinal', timeA: timesSelecionados[2] || null, timeB: timesSelecionados[3] || null, placar: { A: 0, B: 0 }, vencedor_id: null, status: 'Pendente' });
+      } else {
+        for (let i = 0; i < 4; i++) {
+          const tA = timesSelecionados[i * 2] || null;
+          const tB = timesSelecionados[i * 2 + 1] || null;
+          
+          let vencedorId = null;
+          let status = 'Pendente';
+          let placar = { A: 0, B: 0 };
+
+          if (tA && !tB) {
+            vencedorId = tA.id;
+            status = 'Encerrado';
+            placar.A = 'W.O';
+          }
+
+          torneio.partidas.push({
+            id: 'match_q_' + (i + 1),
+            fase: 'Quartas',
+            timeA: tA,
+            timeB: tB,
+            placar: placar,
+            vencedor_id: vencedorId,
+            status: status
+          });
+        }
+
+        const q1 = torneio.partidas.find(p => p.id === 'match_q_1');
+        const q2 = torneio.partidas.find(p => p.id === 'match_q_2');
+        const q3 = torneio.partidas.find(p => p.id === 'match_q_3');
+        const q4 = torneio.partidas.find(p => p.id === 'match_q_4');
+
+        torneio.partidas.push({
+          id: 'match_s_1',
+          fase: 'Semifinal',
+          timeA: (q1 && q1.vencedor_id) ? q1.timeA : null,
+          timeB: (q2 && q2.vencedor_id) ? q2.timeA : null,
+          placar: { A: 0, B: 0 },
+          vencedor_id: null,
+          status: 'Pendente'
+        });
+
+        torneio.partidas.push({
+          id: 'match_s_2',
+          fase: 'Semifinal',
+          timeA: (q3 && q3.vencedor_id) ? q3.timeA : null,
+          timeB: (q4 && q4.vencedor_id) ? q4.timeA : null,
+          placar: { A: 0, B: 0 },
+          vencedor_id: null,
+          status: 'Pendente'
+        });
+      }
+
+      torneio.partidas.push({ id: 'match_f_1', fase: 'Final', timeA: null, timeB: null, placar: { A: 0, B: 0 }, vencedor_id: null, status: 'Pendente' });
+
+      localStorage.setItem('pb_torneio', JSON.stringify(torneio));
+      inicializar();
+    }
+
+   function renderizarChaves() {
+      const pQuartas = document.getElementById('partidas-quartas');
+      const pSemis = document.getElementById('partidas-semis');
+      const pFinal = document.getElementById('partidas-final');
+      const boxCampeao = document.getElementById('box-campeao');
+      const colQuartas = document.getElementById('col-quartas');
+
+      if (!torneio || !torneio.partidas) return;
+
+      const quartas = torneio.partidas.filter(p => p.fase === 'Quartas');
+      const semis = torneio.partidas.filter(p => p.fase === 'Semifinal');
+      const finalMatch = torneio.partidas.find(p => p.fase === 'Final');
+
+      if (colQuartas) {
+        colQuartas.classList.toggle('hidden', quartas.length === 0);
+      }
+
+      const criarCardHTML = (p) => {
+        if (!p) return '';
+        const nomeA = p.timeA ? p.timeA.nome : 'Aguardando...';
+        const tagA = p.timeA ? p.timeA.tag : '-';
+        const nomeB = p.timeB ? p.timeB.nome : 'Aguardando...';
+        const tagB = p.timeB ? p.timeB.tag : '-';
+
+        const placarA = (p.placar && p.placar.A !== undefined) ? p.placar.A : 0;
+        const placarB = (p.placar && p.placar.B !== undefined) ? p.placar.B : 0;
+
+        const vencedorId = p.vencedor_id || p.vencedor;
+        const estiloA = vencedorId && p.timeA && vencedorId === p.timeA.id ? 'bg-green-500/10 text-green-400 font-bold' : '';
+        const estiloB = vencedorId && p.timeB && vencedorId === p.timeB.id ? 'bg-green-500/10 text-green-400 font-bold' : '';
+
+        // Texto adaptativo para o botão se a partida já finalizou
+        const textoBotao = vencedorId ? "Visualizar Dados" : "Gerenciar MD3";
+        const corBotao = vencedorId ? "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white" : "bg-zinc-800 border-zinc-800 text-zinc-400 hover:bg-[#ff3e3e] hover:text-white";
+
+        return `
+          <div class="bg-[#1a1a1e] border border-zinc-800 rounded-lg w-64 overflow-hidden shadow-lg">
+            <div class="flex justify-between items-center px-3 py-2.5 border-b border-zinc-800/50 ${estiloA}">
+              <span class="text-xs truncate max-w-[170px] ${p.timeA ? 'text-zinc-200' : 'text-zinc-600'}">
+                <span class="text-[10px] text-zinc-500 font-mono mr-1">[${tagA}]</span>${nomeA}
+              </span>
+              <span class="text-xs font-mono font-bold text-[#ff3e3e]">${placarA}</span>
+            </div>
+            <div class="flex justify-between items-center px-3 py-2.5 ${estiloB}">
+              <span class="text-xs truncate max-w-[170px] ${p.timeB ? 'text-zinc-200' : 'text-zinc-600'}">
+                <span class="text-[10px] text-zinc-500 font-mono mr-1">[${tagB}]</span>${nomeB}
+              </span>
+              <span class="text-xs font-mono font-bold text-[#ff3e3e]">${placarB}</span>
+            </div>
+            ${p.timeA && p.timeB ? `
+              <button onclick="irParaPartida('${p.id}')" class="w-full text-[11px] font-medium py-1.5 border-t transition cursor-pointer ${corBotao}">
+                ${textoBotao}
+              </button>
+            ` : ''}
+          </div>
+        `;
+      };
+
+      if (pQuartas && quartas.length > 0) pQuartas.innerHTML = quartas.map(criarCardHTML).join('');
+      if (pSemis) pSemis.innerHTML = semis.map(criarCardHTML).join('');
+      if (pFinal && finalMatch) pFinal.innerHTML = criarCardHTML(finalMatch);
+
+      if (boxCampeao) {
+        boxCampeao.innerText = torneio.campeao ? torneio.campeao : 'Aguardando...';
+      }
+    }
+
+    // NOVA FUNÇÃO: Processamento inteligente de KDAs e estatísticas agregadas
+    function processarEstatísticasDoCampeonato() {
+      const elPainel = document.getElementById('painel-estatisticas');
+      if (!torneio || !torneio.campeao) {
+        elPainel.classList.add('hidden');
+        return; 
+      }
+      elPainel.classList.remove('hidden');
+
+      let bancoPlayers = {};
+      let bancoTimes = {};
+
+      // Inicializa a árvore estatística estrutural dos times participantes
+      if (torneio.times_gerais) {
+        torneio.times_gerais.forEach(t => {
+          bancoTimes[t.tag] = { nome: t.nome, roundsPro: 0, roundsContra: 0, kills: 0, status: 'Eliminado' };
+        });
+      }
+      
+      // Insere a tag do campeão no status correto
+      if(torneio.campeao) {
+        const matchTag = torneio.campeao.match(/\[(.*?)\]/);
+        if(matchTag && matchTag[1]) bancoTimes[matchTag[1]].status = '🏆 Campeão';
+      }
+
+      // Varre todas as partidas coletando históricos de rounds e estatísticas individuais
+      torneio.partidas.forEach(p => {
+        if (!p.historico_mapas || p.historico_mapas.length === 0) return;
+
+        const tagA = p.timeA ? p.timeA.tag : null;
+        const tagB = p.timeB ? p.timeB.tag : null;
+
+        p.historico_mapas.forEach(mapa => {
+          if (tagA && bancoTimes[tagA]) {
+            bancoTimes[tagA].roundsPro += parseInt(mapa.scoreA, 10) || 0;
+            bancoTimes[tagA].roundsContra += parseInt(mapa.scoreB, 10) || 0;
+          }
+          if (tagB && bancoTimes[tagB]) {
+            bancoTimes[tagB].roundsPro += parseInt(mapa.scoreB, 10) || 0;
+            bancoTimes[tagB].roundsContra += parseInt(mapa.scoreA, 10) || 0;
+          }
+
+          // Agrega os dados de kills, assists e deaths de cada player por mapa
+          if (mapa.stats) {
+            mapa.stats.forEach(s => {
+              if (!bancoPlayers[s.playerId]) {
+                bancoPlayers[s.playerId] = { nickname: s.nickname, timeTag: s.timeTag, kills: 0, assists: 0, deaths: 0 };
+              }
+              bancoPlayers[s.playerId].kills += parseInt(s.kills, 10) || 0;
+              bancoPlayers[s.playerId].assists += parseInt(s.assists, 10) || 0;
+              bancoPlayers[s.playerId].deaths += parseInt(s.deaths, 10) || 0;
+
+              if (bancoTimes[s.timeTag]) {
+                bancoTimes[s.timeTag].kills += parseInt(s.kills, 10) || 0;
+              }
+            });
+          }
+        });
+      });
+
+      // Transforma em listas tratáveis para ordenação
+      let listaPlayers = Object.values(bancoPlayers);
+      let listaTimes = Object.entries(bancoTimes).map(([tag, dados]) => ({ tag, ...dados }));
+
+      if (listaPlayers.length === 0) return;
+
+      // Cálculo de K/D Rate individual
+      listaPlayers.forEach(p => {
+        p.kd = p.deaths > 0 ? (p.kills / p.deaths) : p.kills;
+      });
+
+      // Ordenação para os Rankings
+      let rankMvp = [...listaPlayers].sort((a, b) => b.kd - a.kd || b.kills - a.kills);
+      let rankFraggers = [...listaPlayers].sort((a, b) => b.kills - a.kills);
+      let rankAssists = [...listaPlayers].sort((a, b) => b.assists - a.assists);
+
+      // Preenche os Destaques (Top Cards)
+      if (rankMvp[0]) {
+        document.getElementById('estatistica-mvp-nome').innerText = `[${rankMvp[0].timeTag}] ${rankMvp[0].nickname}`;
+        document.getElementById('estatistica-mvp-detalhe').innerText = `K/D: ${rankMvp[0].kd.toFixed(2)} (${rankMvp[0].kills}/${rankMvp[0].deaths})`;
+      }
+      if (rankFraggers[0]) {
+        document.getElementById('estatistica-fragger-nome').innerText = `[${rankFraggers[0].timeTag}] ${rankFraggers[0].nickname}`;
+        document.getElementById('estatistica-fragger-detalhe').innerText = `${rankFraggers[0].kills} Total Kills`;
+      }
+      if (rankAssists[0]) {
+        document.getElementById('estatistica-suporte-nome').innerText = `[${rankAssists[0].timeTag}] ${rankAssists[0].nickname}`;
+        document.getElementById('estatistica-suporte-detalhe').innerText = `${rankAssists[0].assists} Assists`;
+      }
+
+      // Renderiza as linhas das tabelas detalhadas
+      const tbodyPlayers = document.getElementById('tbody-top-players');
+      tbodyPlayers.innerHTML = rankFraggers.map((p, idx) => `
+        <tr class="border-b border-zinc-800/30 hover:bg-zinc-900/30 py-2">
+          <td class="py-2.5 font-bold font-mono text-zinc-500">${idx + 1}º</td>
+          <td class="py-2.5 font-medium"><span class="text-zinc-500 font-mono text-[10px] mr-1">[${p.timeTag}]</span>${p.nickname}</td>
+          <td class="py-2.5 text-center font-mono font-bold text-white">${p.kills}</td>
+          <td class="py-2.5 text-center font-mono text-zinc-400">${p.assists}</td>
+          <td class="py-2.5 text-center font-mono text-zinc-500">${p.deaths}</td>
+          <td class="py-2.5 text-center font-mono font-bold text-purple-400">${p.kd.toFixed(2)}</td>
+        </tr>
+      `).join('');
+
+      const tbodyTimes = document.getElementById('tbody-status-times');
+      tbodyTimes.innerHTML = listaTimes.sort((a,b) => b.roundsPro - a.roundsPro).map(t => {
+        const estiloStatus = t.status.includes('🏆') ? 'text-yellow-500 font-bold' : 'text-zinc-500';
+        return `
+          <tr class="border-b border-zinc-800/30 hover:bg-zinc-900/30 py-2">
+            <td class="py-2.5 font-bold text-zinc-200"><span class="text-zinc-500 font-mono text-[10px] mr-1">[${t.tag}]</span>${t.nome}</td>
+            <td class="py-2.5 text-center font-mono text-green-400 font-semibold">${t.roundsPro}</td>
+            <td class="py-2.5 text-center font-mono text-zinc-500">${t.roundsContra}</td>
+            <td class="py-2.5 text-center font-mono text-white font-medium">${t.kills}</td>
+            <td class="py-2.5 text-center text-[11px] uppercase tracking-wider ${estiloStatus}">${t.status}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    window.irParaPartida = function(partidaId) {
+      window.location.href = `partida.html?id=${partidaId}`;
+    };
+
+    window.limparTorneio = function() {
+      if(confirm("Tem certeza que deseja apagar o torneio atual? Os times cadastrados continuarão salvos.")) {
+        localStorage.removeItem('pb_torneio');
+        torneio = null;
+        inicializar();
+      }
+    };
+
+    inicializar();
+  </script>
+</body>
+</html>
