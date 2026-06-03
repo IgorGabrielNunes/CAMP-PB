@@ -1,71 +1,143 @@
 // engine.js
 
 const EnginePB = {
-  // Cria a estrutura padrão do torneio baseada em 8 times selecionados
-  criarNovoTorneio: (listaDe8Times) => {
-    if (listaDe8Times.length !== 8) {
-      alert("Para um mata-mata perfeito de Quartas de Final, selecione exatamente 8 times!");
+  criarNovoTorneio: (listaDeTimes, formato) => {
+    if (!listaDeTimes || listaDeTimes.length < 2) {
+      alert("É necessário pelo menos 2 times para iniciar um torneio!");
       return null;
     }
-
-    const estruturaTorneio = {
-      id: "torneio_" + Date.now(),
-      status: "Em Andamento",
-      campeao: null,
-      times: listaDe8Times, // Copia os times com suas respectivas line-ups de players
-      partidas: [
-        // QUARTAS DE FINAL
-        { id: "p_quartas_1", fase: "Quartas", timeA: listaDe8Times[0], timeB: listaDe8Times[1], placar: { A: 0, B: 0 }, vencedor_id: null, historico_mapas: [], mapas_série: null, mapa3_sorteado: false },
-        { id: "p_quartas_2", fase: "Quartas", timeA: listaDe8Times[2], timeB: listaDe8Times[3], placar: { A: 0, B: 0 }, vencedor_id: null, historico_mapas: [], mapas_série: null, mapa3_sorteado: false },
-        { id: "p_quartas_3", fase: "Quartas", timeA: listaDe8Times[4], timeB: listaDe8Times[5], placar: { A: 0, B: 0 }, vencedor_id: null, historico_mapas: [], mapas_série: null, mapa3_sorteado: false },
-        { id: "p_quartas_4", fase: "Quartas", timeA: listaDe8Times[6], timeB: listaDe8Times[7], placar: { A: 0, B: 0 }, vencedor_id: null, historico_mapas: [], mapas_série: null, mapa3_sorteado: false },
-        
-        // SEMIFINAIS (Aguardando vencedores)
-        { id: "p_semifinal_1", fase: "Semifinal", timeA: null, timeB: null, placar: { A: 0, B: 0 }, vencedor_id: null, historico_mapas: [], mapas_série: null, mapa3_sorteado: false },
-        { id: "p_semifinal_2", fase: "Semifinal", timeA: null, timeB: null, placar: { A: 0, B: 0 }, vencedor_id: null, historico_mapas: [], mapas_série: null, mapa3_sorteado: false },
-        
-        // FINAL
-        { id: "p_final", fase: "Final", timeA: null, timeB: null, placar: { A: 0, B: 0 }, vencedor_id: null, historico_mapas: [], mapas_série: null, mapa3_sorteado: false }
-      ]
-    };
-
-    localStorage.setItem('pb_torneio', JSON.stringify(estruturaTorneio));
-    return estruturaTorneio;
+    return StoragePB.criarTorneio("PB Tournament", formato) ? StoragePB.getTorneio() : null;
   },
 
-  // Vincula dinamicamente novos jogadores a um time e atualiza as partidas atuais dele
+  // Monitora o estado das partidas e empurra os vencedores para a próxima fase correspondente
+  atualizarChaveamentoEProgressao: () => {
+    let torneio = StoragePB.getTorneio();
+    if (!torneio || !torneio.partidas) return;
+
+    // Função auxiliar para extrair com segurança apenas a string do ID
+    const obterIdVencedor = (partida) => {
+      if (!partida || !partida.vencedor_id) return null;
+      return typeof partida.vencedor_id === 'object' ? partida.vencedor_id.id : partida.vencedor_id;
+    };
+
+    // 1. SE FOR MATA-MATA TRADICIONAL
+    if (torneio.formato === "matamata") {
+      const q1 = torneio.partidas.find(p => p.id === "match_q_1");
+      const q2 = torneio.partidas.find(p => p.id === "match_q_2");
+      const q3 = torneio.partidas.find(p => p.id === "match_q_3");
+      const q4 = torneio.partidas.find(p => p.id === "match_q_4");
+
+      const s1 = torneio.partidas.find(p => p.id === "match_s_1");
+      const s2 = torneio.partidas.find(p => p.id === "match_s_2");
+      const f1 = torneio.partidas.find(p => p.id === "match_f_1");
+
+      // Avanço das Quartas para as Semis
+      if (q1 && obterIdVencedor(q1)) s1.timeA = obterIdVencedor(q1) === q1.timeA.id ? q1.timeA : q1.timeB;
+      if (q2 && obterIdVencedor(q2)) s1.timeB = obterIdVencedor(q2) === q2.timeA.id ? q2.timeA : q2.timeB;
+      if (q3 && obterIdVencedor(q3)) s2.timeA = obterIdVencedor(q3) === q3.timeA.id ? q3.timeA : q3.timeB;
+      if (q4 && obterIdVencedor(q4)) s2.timeB = obterIdVencedor(q4) === q4.timeA.id ? q4.timeA : q4.timeB;
+
+      // Avanço das Semis para a Final
+      if (s1 && obterIdVencedor(s1)) f1.timeA = obterIdVencedor(s1) === s1.timeA.id ? s1.timeA : s1.timeB;
+      if (s2 && obterIdVencedor(s2)) f1.timeB = obterIdVencedor(s2) === s2.timeA.id ? s2.timeA : s2.timeB;
+
+      // Definir campeão geral do Mata-Mata
+      if (f1 && obterIdVencedor(f1)) {
+        const tCamp = obterIdVencedor(f1) === f1.timeA.id ? f1.timeA : f1.timeB;
+        torneio.campeao = `[${tCamp.tag}] ${tCamp.nome}`;
+        torneio.status = "Finalizado";
+      }
+    }
+
+    // 2. SE FOR BASEADO EM GRUPOS
+    if (torneio.formato && (torneio.formato === "grupos_final" || torneio.formato === "grupos_playoffs")) {
+      const jogosGrupo = torneio.partidas.filter(p => p.fase === "Fase de Grupos");
+      const todosConcluidos = jogosGrupo.every(p => obterIdVencedor(p) !== null);
+
+      if (todosConcluidos) {
+        const rank = StoragePB.calcularClassificacao();
+        const tGerais = torneio.times_gerais || StoragePB.getTimes();
+
+        if (torneio.formato === "grupos_final" && rank.length >= 2) {
+          const f1 = torneio.partidas.find(p => p.id === "match_f_1");
+          if (f1 && !f1.timeA && !f1.timeB) {
+            f1.timeA = tGerais.find(t => t.id === rank[0].id);
+            f1.timeB = tGerais.find(t => t.id === rank[1].id);
+          }
+          if (f1 && obterIdVencedor(f1)) {
+            const tCamp = obterIdVencedor(f1) === f1.timeA.id ? f1.timeA : f1.timeB;
+            torneio.campeao = `[${tCamp.tag}] ${tCamp.nome}`;
+            torneio.status = "Finalizado";
+          }
+        }
+
+        if (torneio.formato === "grupos_playoffs" && rank.length >= 4) {
+          const s1 = torneio.partidas.find(p => p.id === "match_s_1");
+          const s2 = torneio.partidas.find(p => p.id === "match_s_2");
+          const f1 = torneio.partidas.find(p => p.id === "match_f_1");
+
+          if (s1 && !s1.timeA && !s1.timeB) {
+            s1.timeA = tGerais.find(t => t.id === rank[0].id);
+            s1.timeB = tGerais.find(t => t.id === rank[3].id);
+          }
+          if (s2 && !s2.timeA && !s2.timeB) {
+            s2.timeA = tGerais.find(t => t.id === rank[1].id);
+            s2.timeB = tGerais.find(t => t.id === rank[2].id);
+          }
+
+          if (s1 && obterIdVencedor(s1)) f1.timeA = obterIdVencedor(s1) === s1.timeA.id ? s1.timeA : s1.timeB;
+          if (s2 && obterIdVencedor(s2)) f1.timeB = obterIdVencedor(s2) === s2.timeA.id ? s2.timeA : s2.timeB;
+
+          if (f1 && obterIdVencedor(f1)) {
+            const tCamp = obterIdVencedor(f1) === f1.timeA.id ? f1.timeA : f1.timeB;
+            torneio.campeao = `[${tCamp.tag}] ${tCamp.nome}`;
+            torneio.status = "Finalizado";
+          }
+        }
+      }
+    }
+
+    StoragePB.salvarTorneio(torneio);
+  },
+
   adicionarJogadorAoTime: (timeId, nickname) => {
     let torneio = StoragePB.getTorneio();
-    let timesGlobais = StoragePB.getTimesGlobais();
+    let timesGlobais = StoragePB.getTimesGlobais ? StoragePB.getTimesGlobais() : StoragePB.getTimes();
 
-    // Cria o objeto do player
     const novoPlayer = {
       id: "p_" + Date.now() + Math.random().toString(36).substr(2, 4),
       nickname: nickname
     };
 
-    // Atualiza na lista global de times
     let timeGlobal = timesGlobais.find(t => t.id === timeId);
     if (timeGlobal) {
-      if(!timeGlobal.players) timeGlobal.players = [];
+      if (!timeGlobal.players) timeGlobal.players = [];
       timeGlobal.players.push(novoPlayer);
-      StoragePB.saveTimesGlobais(timesGlobais);
+      if(StoragePB.saveTimesGlobais) StoragePB.saveTimesGlobais(timesGlobais);
+      else localStorage.setItem('pb_times', JSON.stringify(timesGlobais));
     }
 
-    // Se houver um torneio ativo, atualiza dentro dele e nas partidas vigentes
     if (torneio) {
-      let timeTorneio = torneio.times.find(t => t.id === timeId);
-      if (timeTorneio) {
-        if(!timeTorneio.players) timeTorneio.players = [];
-        timeTorneio.players.push(novoPlayer);
+      if (torneio.times_gerais) {
+        let timeTorneio = torneio.times_gerais.find(t => t.id === timeId);
+        if (timeTorneio) {
+          if (!timeTorneio.players) timeTorneio.players = [];
+          timeTorneio.players.push(novoPlayer);
+        }
       }
 
       torneio.partidas.forEach(p => {
-        if (p.timeA && p.timeA.id === timeId) p.timeA.players = timeTorneio.players;
-        if (p.timeB && p.timeB.id === timeId) p.timeB.players = timeTorneio.players;
+        if (p.timeA && p.timeA.id === timeId) {
+          if (!p.timeA.players) p.timeA.players = [];
+          p.timeA.players.push(novoPlayer);
+        }
+        if (p.timeB && p.timeB.id === timeId) {
+          if (!p.timeB.players) p.timeB.players = [];
+          p.timeB.players.push(novoPlayer);
+        }
       });
 
-      StoragePB.saveTorneio(torneio);
+      StoragePB.salvarTorneio(torneio);
     }
   }
 };
