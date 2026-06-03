@@ -19,14 +19,12 @@
 <body class="p-4 md:p-8 font-sans">
 
   <div class="max-w-5xl mx-auto">
-    <!-- Voltar -->
     <div class="mb-6">
       <a href="index.html" class="text-xs font-medium text-zinc-500 hover:text-[#ff3e3e] transition flex items-center gap-1">
         ← Voltar ao Painel
       </a>
     </div>
 
-    <!-- Cabeçalho do Confronto MD3 -->
     <div class="bg-[#1a1a1e] border border-zinc-800 rounded-xl p-6 md:p-8 shadow-2xl mb-8 relative overflow-hidden">
       <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#ff3e3e] to-transparent"></div>
       
@@ -40,20 +38,17 @@
       </div>
 
       <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-        <!-- Time A -->
         <div class="flex-1 text-center md:text-right">
           <span id="tag-timeA" class="font-mono text-xs text-zinc-500 block mb-1">[-]</span>
           <h2 id="nome-timeA" class="text-xl font-black tracking-tight text-white truncate">Time A</h2>
         </div>
 
-        <!-- Placar Central -->
         <div class="bg-zinc-900/80 px-6 py-3 rounded-xl border border-zinc-800 font-mono text-center min-w-[140px]">
           <span class="text-[10px] text-zinc-500 block uppercase tracking-wider mb-0.5">Placar Geral</span>
           <span id="placar-geral" class="text-2xl font-black tracking-wider text-white">0 - 0</span>
           <span class="text-[10px] text-zinc-400 block mt-1">MD3</span>
         </div>
 
-        <!-- Time B -->
         <div class="flex-1 text-center md:text-left">
           <span id="tag-timeB" class="font-mono text-xs text-zinc-500 block mb-1">[-]</span>
           <h2 id="nome-timeB" class="text-xl font-black tracking-tight text-white truncate">Time B</h2>
@@ -61,10 +56,8 @@
       </div>
     </div>
 
-    <!-- Grid de Gerenciamento -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       
-      <!-- Esquerda: Vetos e Picks de Mapas -->
       <div class="space-y-6 lg:col-span-1">
         <div class="bg-[#1a1a1e] border border-zinc-800 rounded-xl p-5 space-y-4 shadow-xl">
           <h3 class="text-xs font-bold text-zinc-400 uppercase tracking-wider border-b border-zinc-800 pb-2">Veto & Pick de Mapas</h3>
@@ -85,7 +78,7 @@
 
           <div class="border-t border-zinc-800/60 pt-4 mt-2 space-y-3">
             <div class="flex justify-between items-center">
-              <label class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Mapa 3 (Desempate)</label>
+              <label class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Mapa 3 (Qualquer outro do Pool)</label>
               <button id="btn-sortear" onclick="sortearMapa3()" disabled class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 disabled:opacity-40 text-[10px] font-bold px-2 py-1 rounded transition cursor-pointer">Sortear</button>
             </div>
             <input type="text" id="input-mapa3" placeholder="Aguardando empate..." readonly class="w-full bg-zinc-900/50 border border-zinc-800/80 rounded-lg text-sm px-3 py-2 text-zinc-400 font-medium cursor-not-allowed outline-none">
@@ -93,7 +86,6 @@
         </div>
       </div>
 
-      <!-- Direita: Registro de Metades (Halfs) -->
       <div class="lg:col-span-2 space-y-6">
         <div id="container-lancamento-dados" class="bg-[#1a1a1e] border border-zinc-800 rounded-xl p-6 shadow-xl space-y-6">
           <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
@@ -102,14 +94,12 @@
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Seleção do Mapa em Jogo -->
             <div class="space-y-1.5 md:col-span-2">
               <label class="text-xs font-medium text-zinc-400">Mapa Atual</label>
               <select id="escolha-mapa-atual" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg text-sm px-3 py-2 text-white focus:outline-none focus:border-[#ff3e3e]">
               </select>
             </div>
 
-            <!-- Entrada de Pontuação: Time A -->
             <div class="bg-zinc-900/40 p-4 rounded-xl border border-zinc-800/60 flex items-center justify-between gap-4">
               <div class="space-y-1">
                 <span id="form-label-timeA" class="font-mono text-xs font-bold text-zinc-300">TAG-A</span>
@@ -121,7 +111,6 @@
               <input type="number" id="score-A" placeholder="Rounds" min="0" class="w-20 bg-zinc-900 border border-zinc-800 text-center rounded-lg py-2 font-mono text-lg font-black text-white focus:outline-none focus:border-[#ff3e3e]">
             </div>
 
-            <!-- Entrada de Pontuação: Time B -->
             <div class="bg-zinc-900/40 p-4 rounded-xl border border-zinc-800/60 flex items-center justify-between gap-4">
               <div class="space-y-1">
                 <span id="form-label-timeB" class="font-mono text-xs font-bold text-zinc-300">TAG-B</span>
@@ -134,11 +123,9 @@
             </div>
           </div>
 
-          <!-- CONTÊINERES SEPARADOS PARA OS FRAGS DE CADA TIME -->
           <div class="space-y-6 pt-2">
             <label class="text-xs font-bold text-zinc-400 uppercase tracking-wider block">Performance Individual Nesta Metade</label>
             
-            <!-- Bloco do Time A -->
             <div class="bg-zinc-900/30 border border-zinc-800 rounded-xl p-4 space-y-3">
               <div class="flex justify-between items-center border-b border-zinc-800 pb-1.5">
                 <h4 id="titulo-frags-timeA" class="text-xs font-bold text-zinc-200 uppercase tracking-wide">TIME A</h4>
@@ -159,7 +146,6 @@
               </div>
             </div>
 
-            <!-- Bloco do Time B -->
             <div class="bg-zinc-900/30 border border-zinc-800 rounded-xl p-4 space-y-3">
               <div class="flex justify-between items-center border-b border-zinc-800 pb-1.5">
                 <h4 id="titulo-frags-timeB" class="text-xs font-bold text-zinc-200 uppercase tracking-wide">TIME B</h4>
@@ -186,7 +172,6 @@
           </button>
         </div>
 
-        <!-- Histórico e Logs de Mapas Já Jogados -->
         <div class="space-y-3">
           <h3 class="text-xs font-bold text-zinc-400 uppercase tracking-wider pl-1">Histórico da Série</h3>
           <div id="historico-mapas" class="space-y-4"></div>
@@ -200,20 +185,15 @@
     const urlParams = new URLSearchParams(window.location.search);
     const partidaId = urlParams.get('id');
 
-    let mapas = [];
     let torneio = null;
-
     let primeiroHalfTemporario = null;
     let etapaAtual = 1; 
 
     try {
-      mapas = (typeof StoragePB !== 'undefined' && StoragePB.getMapas) ? StoragePB.getMapas() : [];
       torneio = (typeof StoragePB !== 'undefined' && StoragePB.getTorneio) ? StoragePB.getTorneio() : null;
     } catch(e) {}
 
-    if (!mapas || mapas.length === 0) mapas = JSON.parse(localStorage.getItem('pb_mapas')) || [];
     if (!torneio) torneio = JSON.parse(localStorage.getItem('pb_torneio')) || null;
-
     let partida = torneio ? torneio.partidas.find(p => p.id === partidaId) : null;
 
     const selectMapa1 = document.getElementById('select-mapa1');
@@ -259,16 +239,24 @@
       document.getElementById('label-pickB').innerText = `Escolha do ${tagB}`;
       document.getElementById('titulo-frags-timeB').innerText = `Jogadores: ${tB}`;
 
-      if (mapas.length === 0) {
-        selectMapa1.innerHTML = '<option value="">Nenhum mapa cadastrado</option>';
-        selectMapa2.innerHTML = '<option value="">Nenhum mapa cadastrado</option>';
+      // 🎯 MODIFICADO: Agora carrega TODOS os mapas ativos (Sem filtro de tipo "regular")
+      let mapasPoolGeral = [];
+      if (typeof StoragePB !== 'undefined' && StoragePB.getMapas) {
+        mapasPoolGeral = StoragePB.getMapas().filter(m => m.ativo);
       } else {
-        const optionsHTML = mapas.map(m => `<option value="${m.id}">${m.nome}</option>`).join('');
+        const localMapas = JSON.parse(localStorage.getItem('pb_mapas')) || [];
+        mapasPoolGeral = localMapas.filter(m => m.ativo);
+      }
+
+      if (mapasPoolGeral.length === 0) {
+        selectMapa1.innerHTML = '<option value="">Nenhum mapa cadastrado/ativo</option>';
+        selectMapa2.innerHTML = '<option value="">Nenhum mapa cadastrado/ativo</option>';
+      } else {
+        const optionsHTML = mapasPoolGeral.map(m => `<option value="${m.id}">${m.nome}</option>`).join('');
         selectMapa1.innerHTML = optionsHTML;
         selectMapa2.innerHTML = optionsHTML;
       }
 
-      // Ouvintes de evento para sincronizar e atualizar as badges laterais
       const atualizarBadgesLados = () => {
         const ladoA = document.getElementById('lado-A').value;
         const ladoB = document.getElementById('lado-B').value;
@@ -305,34 +293,41 @@
     }
 
     function restaurarEstadoMapas() {
-      if (partida.mapas_série && partida.mapas_série.mapa1) {
-        selectMapa1.value = partida.mapas_série.mapa1;
-        selectMapa2.value = partida.mapas_série.mapa2;
+      if (partida.mapas_serie && partida.mapas_serie.mapa1) {
+        selectMapa1.value = partida.mapas_serie.mapa1;
+        selectMapa2.value = partida.mapas_serie.mapa2;
         selectMapa1.disabled = true;
         selectMapa2.disabled = true;
         btnConfirmarMapas.disabled = true;
         btnConfirmarMapas.innerText = "Mapas Definidos";
         if (!partida.vencedor_id) btnSalvarMapa.disabled = false;
 
-        if (partida.mapas_série.mapa3) {
-          const m3Data = mapas.find(m => m.id === partida.mapas_série.mapa3);
+        let todosMapas = [];
+        if (typeof StoragePB !== 'undefined' && StoragePB.getMapas) {
+          todosMapas = StoragePB.getMapas();
+        } else {
+          todosMapas = JSON.parse(localStorage.getItem('pb_mapas')) || [];
+        }
+
+        if (partida.mapas_serie.mapa3) {
+          const m3Data = todosMapas.find(m => m.id === partida.mapas_serie.mapa3);
           inputMapa3.value = m3Data ? m3Data.nome : "Sorteado";
         }
 
         const jogadosIds = partida.historico_mapas.map(h => h.mapaId);
         let htmlOpcoes = '';
 
-        if (!jogadosIds.includes(partida.mapas_série.mapa1)) {
-          const mData = mapas.find(m => m.id === partida.mapas_série.mapa1);
-          if(mData) htmlOpcoes += `<option value="${partida.mapas_série.mapa1}">${mData.nome}</option>`;
+        if (!jogadosIds.includes(partida.mapas_serie.mapa1)) {
+          const mData = todosMapas.find(m => m.id === partida.mapas_serie.mapa1);
+          if(mData) htmlOpcoes += `<option value="${partida.mapas_serie.mapa1}">${mData.nome}</option>`;
         }
-        if (!jogadosIds.includes(partida.mapas_série.mapa2)) {
-          const mData = mapas.find(m => m.id === partida.mapas_série.mapa2);
-          if(mData) htmlOpcoes += `<option value="${partida.mapas_série.mapa2}">${mData.nome}</option>`;
+        if (!jogadosIds.includes(partida.mapas_serie.mapa2)) {
+          const mData = todosMapas.find(m => m.id === partida.mapas_serie.mapa2);
+          if(mData) htmlOpcoes += `<option value="${partida.mapas_serie.mapa2}">${mData.nome}</option>`;
         }
-        if (partida.mapas_série.mapa3 && !jogadosIds.includes(partida.mapas_série.mapa3)) {
-          const mData = mapas.find(m => m.id === partida.mapas_série.mapa3);
-          if(mData) htmlOpcoes += `<option value="${partida.mapas_série.mapa3}">${mData.nome}</option>`;
+        if (partida.mapas_serie.mapa3 && !jogadosIds.includes(partida.mapas_serie.mapa3)) {
+          const mData = todosMapas.find(m => m.id === partida.mapas_serie.mapa3);
+          if(mData) htmlOpcoes += `<option value="${partida.mapas_serie.mapa3}">${mData.nome}</option>`;
         }
 
         selectMapaAtual.innerHTML = htmlOpcoes;
@@ -360,7 +355,7 @@
         return;
       }
 
-      partida.mapas_série = { mapa1: m1Id, mapa2: m2Id, mapa3: null };
+      partida.mapas_serie = { mapa1: m1Id, mapa2: m2Id, mapa3: null };
       partida.mapa3_sorteado = false;
       
       selectMapa1.disabled = true;
@@ -368,8 +363,9 @@
       btnConfirmarMapas.disabled = true;
       btnConfirmarMapas.innerText = "Mapas Definidos";
 
-      const m1Nome = mapas.find(m => m.id === m1Id).nome;
-      const m2Nome = mapas.find(m => m.id === m2Id).nome;
+      let todosMapas = (typeof StoragePB !== 'undefined') ? StoragePB.getMapas() : (JSON.parse(localStorage.getItem('pb_mapas')) || []);
+      const m1Nome = todosMapas.find(m => m.id === m1Id).nome;
+      const m2Nome = todosMapas.find(m => m.id === m2Id).nome;
 
       selectMapaAtual.innerHTML = `
         <option value="${m1Id}">${m1Nome}</option>
@@ -377,37 +373,52 @@
       `;
 
       btnSalvarMapa.disabled = false;
-      localStorage.setItem('pb_torneio', JSON.stringify(torneio));
+      if (typeof StoragePB !== 'undefined' && StoragePB.salvarTorneio) {
+        StoragePB.salvarTorneio(torneio);
+      } else {
+        localStorage.setItem('pb_torneio', JSON.stringify(torneio));
+      }
     }
 
     function sortearMapa3() {
-      const m1Id = partida.mapas_série.mapa1;
-      const m2Id = partida.mapas_série.mapa2;
-      const mapasDisponiveis = mapas.filter(m => m.id !== m1Id && m.id !== m2Id);
+      const m1Id = partida.mapas_serie.mapa1;
+      const m2Id = partida.mapas_serie.mapa2;
+
+      let todosOsMapas = [];
+      if (typeof StoragePB !== 'undefined' && StoragePB.getMapas) {
+        todosOsMapas = StoragePB.getMapas();
+      } else {
+        todosOsMapas = JSON.parse(localStorage.getItem('pb_mapas')) || [];
+      }
+
+      // 🎯 NOVA REGRA DE NEGÓCIO: Filtra qualquer mapa ativo, EXCETO o mapa 1 e o mapa 2 escolhidos
+      let mapasDisponiveis = todosOsMapas.filter(m => m.ativo && m.id !== m1Id && m.id !== m2Id);
 
       if(mapasDisponiveis.length === 0) {
-        alert("Cadastre mais mapas para o desempate!");
+        alert("Não restaram outros mapas ativos no pool para realizar o desempate!");
         return;
       }
 
       const sorteado = mapasDisponiveis[Math.floor(Math.random() * mapasDisponiveis.length)];
-      partida.mapas_série.mapa3 = sorteado.id;
+      partida.mapas_serie.mapa3 = sorteado.id;
       partida.mapa3_sorteado = true;
 
       inputMapa3.value = sorteado.nome;
       btnSortear.disabled = true;
 
       selectMapaAtual.innerHTML += `<option value="${sorteado.id}">${sorteado.nome}</option>`;
-      localStorage.setItem('pb_torneio', JSON.stringify(torneio));
+      
+      if (typeof StoragePB !== 'undefined' && StoragePB.salvarTorneio) {
+        StoragePB.salvarTorneio(torneio);
+      } else {
+        localStorage.setItem('pb_torneio', JSON.stringify(torneio));
+      }
     }
 
     function renderizarInputsKDA() {
       const containerA = document.getElementById('inputs-frags-timeA');
       const containerB = document.getElementById('inputs-frags-timeB');
       
-      let htmlA = '';
-      let htmlB = '';
-
       const criarLinhasHTML = (players) => {
         return players.map(p => `
           <tr class="align-middle text-center">
@@ -422,8 +433,8 @@
       const playersA = partida.timeA?.players || [];
       const playersB = partida.timeB?.players || [];
 
-      containerA.innerHTML = playersA.length > 0 ? criarLinhasHTML(playersA) : `<tr><td colspan="4" class="py-4 text-zinc-500 text-center italic">Nenhum player cadastrado neste time.</td></tr>`;
-      containerB.innerHTML = playersB.length > 0 ? criarLinhasHTML(playersB) : `<tr><td colspan="4" class="py-4 text-zinc-500 text-center italic">Nenhum player cadastrado neste time.</td></tr>`;
+      containerA.innerHTML = playersA.length > 0 ? criarLinhasHTML(playersA) : `<tr><td colspan="4" class="py-4 text-zinc-500 text-center italic">Nenhum player cadastrado.</td></tr>`;
+      containerB.innerHTML = playersB.length > 0 ? criarLinhasHTML(playersB) : `<tr><td colspan="4" class="py-4 text-zinc-500 text-center italic">Nenhum player cadastrado.</td></tr>`;
     }
 
     function salvarMetadeAtual() {
@@ -466,7 +477,6 @@
         document.getElementById('lado-A').value = ladoA === 'CT' ? 'TR' : 'CT';
         document.getElementById('lado-B').value = ladoB === 'CT' ? 'TR' : 'CT';
         
-        // Disparar evento de mudança de lado manualmente para recalcular as cores das equipes
         document.getElementById('lado-A').dispatchEvent(new Event('change'));
 
         document.getElementById('score-A').value = '';
@@ -474,7 +484,7 @@
         selectMapaAtual.disabled = true; 
         renderizarInputsKDA();
         
-        alert("Primeira metade gravada! Os lados e as caixas de frags foram invertidos de TR/CT automaticamente para a segunda metade.");
+        alert("Primeira metade gravada! Os lados foram invertidos para a segunda metade.");
       } 
       else {
         const mapaId = selectMapaAtual.value;
@@ -603,50 +613,24 @@
       if (partida.placar.A === 2) vencedor = partida.timeA;
       if (partida.placar.B === 2) vencedor = partida.timeB;
 
-      if(vencedor) {
+      if (vencedor) {
         partida.vencedor_id = vencedor.id;
-        localStorage.setItem('pb_torneio', JSON.stringify(torneio));
-        setTimeout(() => { atualizarChaveMataMata(vencedor); }, 500);
+        partida.vencedor = vencedor.nome;
+        
+        document.getElementById('container-lancamento-dados').classList.add('hidden');
+        document.getElementById('status-finalizada').classList.remove('hidden');
+        
+        alert(`Fim de série! O vencedor do confronto foi: ${vencedor.nome}`);
+      }
+
+      if (typeof StoragePB !== 'undefined' && StoragePB.salvarTorneio) {
+        StoragePB.salvarTorneio(torneio);
       } else {
-        if (partida.placar.A === 1 && partida.placar.B === 1) {
-          btnSortear.disabled = false;
-          alert("Série empatada em 1x1! Realize o sorteio do Mapa 3.");
-        }
         localStorage.setItem('pb_torneio', JSON.stringify(torneio));
       }
     }
 
-    function atualizarChaveMataMata(vencedorTime) {
-      const todasPartidas = torneio.partidas;
-
-      if (partida.fase === 'Quartas') {
-        let proximaPartidaId = '';
-        if(partida.id === 'p_quartas_1' || partida.id === 'p_quartas_2' || partida.id === 'match_q_1' || partida.id === 'match_q_2') proximaPartidaId = 'match_s_1';
-        if(partida.id === 'p_quartas_3' || partida.id === 'p_quartas_4' || partida.id === 'match_q_3' || partida.id === 'match_q_4') proximaPartidaId = 'match_s_2';
-
-        let proxima = todasPartidas.find(p => p.id === proximaPartidaId || p.id === proximaPartidaId.replace('match_', 'p_'));
-        if(proxima) {
-          if (!proxima.timeA) proxima.timeA = vencedorTime;
-          else proxima.timeB = vencedorTime;
-        }
-      } 
-      else if (partida.fase === 'Semifinal') {
-        let finalMatch = todasPartidas.find(p => p.fase === 'Final' || p.id === 'match_f_1');
-        if(finalMatch) {
-          if (!finalMatch.timeA) finalMatch.timeA = vencedorTime;
-          else finalMatch.timeB = vencedorTime;
-        }
-      } 
-      else if (partida.fase === 'Final') {
-        torneio.campeao = `[${vencedorTime.tag}] ${vencedorTime.nome}`;
-      }
-
-      localStorage.setItem('pb_torneio', JSON.stringify(torneio));
-      alert(`Série Concluída! O time ${vencedorTime.nome} avançou de fase.`);
-      window.location.href = 'index.html';
-    }
-
-    inicializarPartida();
+    window.addEventListener('DOMContentLoaded', inicializarPartida);
   </script>
 </body>
 </html>
