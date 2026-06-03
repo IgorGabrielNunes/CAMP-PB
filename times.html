@@ -3,131 +3,94 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PB Tournament - Times</title>
-  <!-- Mudado para a versão estável e robusta do Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>PB Tournament - Times & Players</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="storage.js"></script>
   <style>
     body { background-color: #121214; color: #e1e1e6; }
   </style>
 </head>
 <body class="p-6 md:p-12 font-sans">
 
-  <div class="max-w-5xl mx-auto">
-    <!-- Navegação -->
+  <div class="max-w-6xl mx-auto">
     <nav class="flex gap-6 mb-12 border-b border-zinc-800 pb-4 text-sm font-medium text-zinc-400">
       <a href="index.html" class="hover:text-white transition">Chaveamento</a>
       <a href="times.html" class="text-[#ff3e3e] border-b-2 border-[#ff3e3e] pb-4 -mb-[18px]">Times & Players</a>
       <a href="mapas.html" class="hover:text-white transition">Mapas</a>
     </nav>
 
-    <h1 class="text-2xl font-bold tracking-tight mb-8">Gerenciamento de Times</h1>
+    <h1 class="text-2xl font-bold tracking-tight mb-8">Gerenciamento de Times e Elencos</h1>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Formulário de Time -->
-      <div class="bg-[#1a1a1e] p-6 rounded-xl border border-zinc-800/80 h-fit">
-        <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Novo Time</h2>
-        <form id="form-time" class="space-y-4">
-          <div>
-            <label class="block text-xs text-zinc-400 mb-1">Nome do Time</label>
-            <input type="text" id="nome-time" required placeholder="Ex: CNB e-Sports" 
-                   class="w-full bg-[#121214] border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#ff3e3e] transition">
-          </div>
-          <div>
-            <label class="block text-xs text-zinc-400 mb-1">TAG</label>
-            <input type="text" id="tag-time" maxlength="4" required placeholder="Ex: CNB" 
-                   class="w-full bg-[#121214] border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#ff3e3e] transition uppercase">
-          </div>
-          <button type="submit" class="w-full bg-[#ff3e3e] hover:bg-[#e03535] text-white text-sm font-medium py-2 rounded-lg transition cursor-pointer">
-            Criar Time
-          </button>
-        </form>
+      <div class="bg-[#1a1a1e] p-6 rounded-xl border border-zinc-800/80 h-fit space-y-6">
+        <div>
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Novo Time</h2>
+          <form id="form-time" class="space-y-4">
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1">Nome do Time</label>
+              <input type="text" id="nome-time" required placeholder="Ex: Black Dragons" 
+                     class="w-full bg-[#121214] border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#ff3e3e] transition text-white">
+            </div>
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1">TAG (Max 4 letras)</label>
+              <input type="text" id="tag-time" required maxlength="4" placeholder="Ex: BD" 
+                     class="w-full bg-[#121214] border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#ff3e3e] transition uppercase text-white">
+            </div>
+            <button type="submit" class="w-full bg-[#ff3e3e] hover:bg-[#e03535] text-white text-sm font-medium py-2 rounded-lg transition cursor-pointer">
+              Cadastrar Time
+            </button>
+          </form>
+        </div>
+
+        <hr class="border-zinc-800" />
+
+        <div>
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Adicionar Player</h2>
+          <form id="form-player" class="space-y-4">
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1">Selecionar Time</label>
+              <select id="select-time-player" required class="w-full bg-[#121214] border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#ff3e3e] transition text-white">
+                <option value="">Escolha um time...</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1">Nickname do Player</label>
+              <input type="text" id="nick-player" required placeholder="Ex: Foox" 
+                     class="w-full bg-[#121214] border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#ff3e3e] transition text-white">
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium py-2 rounded-lg transition cursor-pointer">
+              Adicionar Player
+            </button>
+          </form>
+        </div>
       </div>
 
-      <!-- Grid de Times Dinâmico -->
-      <div class="lg:col-span-2 space-y-6" id="grid-times">
-        <!-- Inserido via JS -->
+      <div class="lg:col-span-2 bg-[#1a1a1e] p-6 rounded-xl border border-zinc-800/80">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Times e Players Registrados</h2>
+        <div id="lista-times" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          </div>
       </div>
     </div>
   </div>
 
   <script>
+    // Sistema unificado de leitura de cache
+    let torneio = JSON.parse(localStorage.getItem('pb_torneio')) || { times: [], partidas: [] };
+    
+    if (!torneio.times) torneio.times = [];
+    if (!torneio.partidas) torneio.partidas = [];
+
     const formTime = document.getElementById('form-time');
-    const gridTimes = document.getElementById('grid-times');
-
-    // Integração com o Storage centralizado ou fallback para a lista isolada de times
-    let torneio = JSON.parse(localStorage.getItem('pb_torneio'));
-    let times = JSON.parse(localStorage.getItem('pb_times')) || [];
-
-    // Se o torneio já existir e contiver uma propriedade "times_gerais", usamos ela para manter a sincronia
-    if (torneio && torneio.times_gerais) {
-      times = torneio.times_gerais;
-    }
+    const formPlayer = document.getElementById('form-player');
+    const listaTimes = document.getElementById('lista-times');
+    const selectTimePlayer = document.getElementById('select-time-player');
 
     function salvarDados() {
-      // Salva na lista isolada de times
-      localStorage.setItem('pb_times', JSON.stringify(times));
-      
-      // Se o torneio existir, atualiza ele e sincroniza as lines nos chaveamentos ativos
-      if (torneio) {
-        torneio.times_gerais = times;
-        
-        // Sincroniza os players das partidas que ainda vão acontecer ou estão em andamento
-        if (torneio.partidas) {
-          torneio.partidas.forEach(partida => {
-            const timeAAtualizado = times.find(t => t.id === partida.timeA?.id);
-            const timeBAtualizado = times.find(t => t.id === partida.timeB?.id);
-            
-            if (timeAAtualizado) partida.timeA.players = timeAAtualizado.players;
-            if (timeBAtualizado) partida.timeB.players = timeBAtualizado.players;
-          });
-        }
-        localStorage.setItem('pb_torneio', JSON.stringify(torneio));
-      }
+      localStorage.setItem('pb_torneio', JSON.stringify(torneio));
+      render();
     }
 
-    function renderTimes() {
-      if (times.length === 0) {
-        gridTimes.innerHTML = `<div class="bg-[#1a1a1e] p-6 rounded-xl border border-zinc-800/80 text-zinc-500 text-sm">Nenhum time cadastrado ainda.</div>`;
-        return;
-      }
-
-      gridTimes.innerHTML = times.map(time => `
-        <div class="bg-[#1a1a1e] p-6 rounded-xl border border-zinc-800/80">
-          <div class="flex justify-between items-start border-b border-zinc-800/60 pb-3 mb-4">
-            <div>
-              <span class="text-xs bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded font-mono font-bold mr-2">${time.tag}</span>
-              <h3 class="inline-block text-base font-bold text-white">${time.nome}</h3>
-            </div>
-            <button onclick="deletarTime('${time.id}')" class="text-zinc-500 hover:text-red-400 text-xs transition cursor-pointer">Excluir Time</button>
-          </div>
-
-          <!-- Cadastro de player rápido dentro do time -->
-          <div class="flex gap-2 mb-4">
-            <input type="text" id="input-p-${time.id}" placeholder="Nickname do Player" 
-                   class="flex-1 bg-[#121214] border border-zinc-800 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-[#ff3e3e] transition">
-            <button onclick="adicionarPlayer('${time.id}')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer">
-              + Add
-            </button>
-          </div>
-
-          <!-- Lista de Players -->
-          <div class="space-y-1.5">
-            <span class="text-[11px] uppercase tracking-wider font-semibold text-zinc-500 block">Line-up (${time.players ? time.players.length : 0})</span>
-            ${(!time.players || time.players.length === 0) ? '<p class="text-xs text-zinc-600 italic">Sem players na line.</p>' : ''}
-            <div class="flex flex-wrap gap-2">
-              ${(time.players || []).map(p => `
-                <span class="inline-flex items-center gap-1.5 bg-[#121214] border border-zinc-800 text-zinc-300 px-2.5 py-1 rounded-md text-xs">
-                  ${p.nickname}
-                  <button onclick="deletarPlayer('${time.id}', '${p.id}')" class="text-zinc-600 hover:text-red-400 font-bold ml-1 cursor-pointer">×</button>
-                </span>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // Evento criar time
+    // --- OPERAÇÕES DO TIME ---
     formTime.addEventListener('submit', (e) => {
       e.preventDefault();
       const nomeInput = document.getElementById('nome-time');
@@ -140,51 +103,165 @@
         players: []
       };
 
-      times.push(novoTime);
-      salvarDados();
+      torneio.times.push(novoTime);
       nomeInput.value = '';
       tagInput.value = '';
-      renderTimes();
+      salvarDados();
     });
 
-    // Ações de Player
-    window.adicionarPlayer = function(timeId) {
-      const input = document.getElementById(`input-p-${timeId}`);
-      const nick = input.value.trim();
-      if(!nick) return;
+    window.editarTime = function(timeId) {
+      const time = torneio.times.find(t => t.id === timeId);
+      if (!time) return;
 
-      const timeIdx = times.findIndex(t => t.id === timeId);
-      if (!times[timeIdx].players) times[timeIdx].players = [];
+      const novoNome = prompt("Digite o novo nome do Time:", time.nome);
+      if (novoNome === null) return;
       
-      times[timeIdx].players.push({
-        id: 'p_' + Date.now() + Math.random().toString(36).substr(2, 5),
-        nickname: nick
-      });
+      const novaTag = prompt("Digite a nova TAG do Time (Max 4 letras):", time.tag);
+      if (novaTag === null) return;
 
-      salvarDados();
-      renderTimes();
-    };
-
-    window.deletarPlayer = function(timeId, playerId) {
-      const timeIdx = times.findIndex(t => t.id === timeId);
-      times[timeIdx].players = times[timeIdx].players.filter(p => p.id !== playerId);
-      salvarDados();
-      renderTimes();
-    };
-
-    window.deletarTime = function(id) {
-      // Evita problemas se o time já fizer parte de um chaveamento ativo
-      if (torneio && torneio.partidas && torneio.partidas.some(p => p.timeA?.id === id || p.timeB?.id === id)) {
-        alert("Este time não pode ser excluído porque já está alocado em um chaveamento ativo!");
+      if (novoNome.trim() === "" || novaTag.trim() === "") {
+        alert("Nome e TAG não podem ficar vazios!");
         return;
       }
 
-      times = times.filter(t => t.id !== id);
+      time.nome = novoNome.trim();
+      time.tag = novaTag.trim().toUpperCase();
+
+      if (torneio.partidas) {
+        torneio.partidas.forEach(p => {
+          if (p.timeA && p.timeA.id === timeId) {
+            p.timeA.nome = time.nome;
+            p.timeA.tag = time.tag;
+          }
+          if (p.timeB && p.timeB.id === timeId) {
+            p.timeB.nome = time.nome;
+            p.timeB.tag = time.tag;
+          }
+        });
+      }
+
       salvarDados();
-      renderTimes();
     };
 
-    renderTimes();
+    window.deletarTime = function(timeId) {
+      if (confirm("Tem certeza que deseja excluir este time e todos os seus jogadores?")) {
+        torneio.times = torneio.times.filter(t => t.id !== timeId);
+        salvarDados();
+      }
+    };
+
+    // --- OPERAÇÕES DOS PLAYERS ---
+    formPlayer.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const timeId = selectTimePlayer.value;
+      const nickInput = document.getElementById('nick-player');
+
+      if (!timeId) {
+        alert("Selecione um time válido antes de adicionar o player!");
+        return;
+      }
+
+      const time = torneio.times.find(t => t.id === timeId);
+      if (!time) return;
+
+      const novoPlayer = {
+        id: 'p_' + Date.now(),
+        nickname: nickInput.value.trim()
+      };
+
+      if (!time.players) time.players = [];
+      time.players.push(novoPlayer);
+      nickInput.value = '';
+      salvarDados();
+    });
+
+    window.editarPlayer = function(timeId, playerId) {
+      const time = torneio.times.find(t => t.id === timeId);
+      if (!time) return;
+
+      const player = time.players.find(p => p.id === playerId);
+      if (!player) return;
+
+      const novoNick = prompt("Digite o novo Nickname do jogador:", player.nickname);
+      if (novoNick === null || novoNick.trim() === "") return;
+
+      player.nickname = novoNick.trim();
+      salvarDados();
+    };
+
+    window.deletarPlayer = function(timeId, playerId) {
+      const time = torneio.times.find(t => t.id === timeId);
+      if (!time) return;
+
+      time.players = time.players.filter(p => p.id !== playerId);
+      salvarDados();
+    };
+
+    // --- RENDERIZAÇÃO CORRIGIDA ---
+    function render() {
+      // 1. Atualiza os seletores de times dinamicamente
+      const valorSelecionadoAnterior = selectTimePlayer.value;
+      selectTimePlayer.innerHTML = '<option value="">Escolha um time...</option>' + 
+        torneio.times.map(t => `<option value="${t.id}">${t.nome} [${t.tag}]</option>`).join('');
+      selectTimePlayer.value = valorSelecionadoAnterior;
+
+      // 2. Monta o HTML da lista de times cadastrados
+      if (!torneio.times || torneio.times.length === 0) {
+        listaTimes.innerHTML = `<div class="text-zinc-500 text-sm text-center py-8 col-span-full">Nenhum time cadastrado ainda.</div>`;
+        return;
+      }
+
+      listaTimes.innerHTML = torneio.times.map(time => {
+        const playersList = time.players && time.players.length > 0 
+          ? time.players.map(p => `
+              <div class="flex justify-between items-center bg-zinc-900/60 px-3 py-1.5 rounded border border-zinc-800 text-xs">
+                <span class="text-zinc-300 font-mono">${p.nickname}</span>
+                <div class="flex gap-2">
+                  <button onclick="editarPlayer('${time.id}', '${p.id}')" class="text-zinc-500 hover:text-blue-400 transition cursor-pointer text-[10px]">
+                    Editar
+                  </button>
+                  <span class="text-zinc-800">|</span>
+                  <button onclick="deletarPlayer('${time.id}', '${p.id}')" class="text-zinc-600 hover:text-red-400 transition cursor-pointer text-[10px]">
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            `).join('')
+          : `<div class="text-[11px] text-zinc-600 italic">Nenhum jogador neste time.</div>`;
+
+        return `
+          <div class="bg-[#121214] border border-zinc-800 rounded-xl p-4 flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex justify-between items-start border-b border-zinc-800/60 pb-2 mb-3">
+                <div>
+                  <h3 class="text-sm font-black text-white flex items-center gap-1.5">
+                    ${time.nome} 
+                    <span class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded font-mono font-normal">${time.tag}</span>
+                  </h3>
+                </div>
+                <div class="flex gap-2 text-xs">
+                  <button onclick="editarTime('${time.id}')" class="text-amber-400/80 hover:text-amber-400 transition cursor-pointer text-[11px]">
+                    Editar
+                  </button>
+                  <span class="text-zinc-800">|</span>
+                  <button onclick="deletarTime('${time.id}')" class="text-zinc-500 hover:text-red-400 transition cursor-pointer text-[11px]">
+                    Excluir
+                  </button>
+                </div>
+              </div>
+
+              <div class="space-y-1.5">
+                <h4 class="text-[10px] uppercase tracking-wider font-bold text-zinc-500 block mb-1">Line-up</h4>
+                ${playersList}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 🎯 CORREÇÃO CRUCIAL: Executa a renderização assim que o script é lido do arquivo.
+    render();
   </script>
 </body>
 </html>
